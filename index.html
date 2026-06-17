@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nogal 9 — Comparador de Presupuestos</title>
+<style>
+  :root {
+    --blue: #2563eb;
+    --blue-dark: #1e40af;
+    --orange: #f97316;
+    --orange-dark: #ea580c;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --green: #16a34a;
+    --red: #dc2626;
+    --yellow: #eab308;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+    color: white;
+    padding: 3rem 1.5rem 2.5rem;
+    text-align: center;
+  }
+  .hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .hero p { opacity: 0.85; font-size: 1.05rem; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card.featured { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange), 0 4px 12px rgba(249,115,22,0.12); }
+  .card-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; }
+  .card.featured .card-label { color: var(--orange); }
+  .card-amount { font-size: 2rem; font-weight: 800; }
+  .card-detail { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .card .tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem;
+    border-radius: 999px; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .tag-green { background: #dcfce7; color: var(--green); }
+  .tag-orange { background: #ffedd5; color: var(--orange-dark); }
+  .tag-red { background: #fee2e2; color: var(--red); }
+
+  h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; }
+  h2::after { content: ''; display: block; height: 3px; width: 48px; background: var(--blue); border-radius: 2px; margin-top: 0.5rem; }
+
+  .table-wrap {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  thead { background: #f1f5f9; }
+  th { text-align: left; padding: 0.75rem 1rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  td { padding: 0.65rem 1rem; border-top: 1px solid var(--border); }
+  tr:hover { background: #f8fafc; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  td.diff-pos { color: var(--red); }
+  td.diff-neg { color: var(--green); }
+  td.diff-zero { color: var(--text-muted); }
+
+  .section { margin-bottom: 2.5rem; }
+
+  .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.65rem 1.25rem; border-radius: 8px; font-size: 0.9rem;
+    font-weight: 600; text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-outline { background: white; color: var(--blue); border: 1px solid var(--blue); }
+  .btn-outline:hover { background: #eff6ff; }
+  .btn-orange { background: var(--orange); color: white; }
+  .btn-orange:hover { background: var(--orange-dark); }
+
+  .status-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 2.5rem;
+  }
+  .status-ok { background: #dcfce7; color: #166534; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  .footer {
+    text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.8rem;
+    border-top: 1px solid var(--border); margin-top: 2rem;
+  }
+  .footer a { color: var(--blue); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 1.5rem; }
+    .card-amount { font-size: 1.5rem; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 0.5rem 0.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🏗️ Nogal 9</h1>
+  <p>9 Viviendas y Trasteros — Madrid</p>
+</div>
+
+<div class="container">
+
+  <div class="status-bar status-ok">
+    <span class="status-dot"></span>
+    Proyecto activo · Presupuesto de ejecución material (PEM) referenciado
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="cards">
+    <div class="card featured">
+      <div class="card-label">Presupuesto General (PEM)</div>
+      <div class="card-amount">1.218.454 €</div>
+      <div class="card-detail">28 capítulos · 1.340.299 € con IVA</div>
+      <span class="tag tag-green">Referencia GLAM</span>
+    </div>
+    <div class="card">
+      <div class="card-label">Proyecto Básico (CYPE)</div>
+      <div class="card-amount">523.705 €</div>
+      <div class="card-detail">27 capítulos · 576.076 € con IVA</div>
+      <span class="tag tag-orange">Base de referencia</span>
+    </div>
+    <div class="card">
+      <div class="card-label">Oferta Trevicon</div>
+      <div class="card-amount">1.098.001 €</div>
+      <div class="card-detail">27 capítulos · IVA 10% incluido</div>
+      <span class="tag tag-orange">Contratista</span>
+    </div>
+  </div>
+
+  <!-- Capítulos PEM -->
+  <div class="section">
+    <h2>Capítulos del PEM — GLAM</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>Concepto</th>
+            <th style="text-align:right">Importe</th>
+            <th style="text-align:right">% PEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>01</td><td>Movimiento de tierras</td><td class="num">2.041,83 €</td><td class="num diff-zero">0,2%</td></tr>
+          <tr><td>03</td><td>Cimentación</td><td class="num">108.327,64 €</td><td class="num">8,9%</td></tr>
+          <tr><td>04</td><td>Estructuras</td><td class="num">177.237,29 €</td><td class="num">14,5%</td></tr>
+          <tr><td>05</td><td>Albañilería</td><td class="num">180.370,25 €</td><td class="num">14,8%</td></tr>
+          <tr><td>06</td><td>Revestimientos y falsos techos</td><td class="num">51.280,29 €</td><td class="num">4,2%</td></tr>
+          <tr><td>07</td><td>Cubierta</td><td class="num">13.161,38 €</td><td class="num">1,1%</td></tr>
+          <tr><td>08</td><td>Aislamiento e impermeabilización</td><td class="num">1.489,87 €</td><td class="num">0,1%</td></tr>
+          <tr><td>09</td><td>Solados y alicatados</td><td class="num">78.352,21 €</td><td class="num">6,4%</td></tr>
+          <tr><td>10</td><td>Carpintería PVC</td><td class="num">54.983,42 €</td><td class="num">4,5%</td></tr>
+          <tr><td>11</td><td>Carpintería de madera</td><td class="num">39.383,82 €</td><td class="num">3,2%</td></tr>
+          <tr><td>12</td><td>Cerrajería</td><td class="num">16.812,91 €</td><td class="num">1,4%</td></tr>
+          <tr><td>13</td><td>Instalación de electricidad</td><td class="num">82.846,90 €</td><td class="num">6,8%</td></tr>
+          <tr><td>14</td><td>Instalación de telecomunicaciones</td><td class="num">19.413,70 €</td><td class="num">1,6%</td></tr>
+          <tr><td>15</td><td>Instalación de fontanería</td><td class="num">48.382,62 €</td><td class="num">4,0%</td></tr>
+          <tr><td>16</td><td>Aparatos sanitarios</td><td class="num">19.281,02 €</td><td class="num">1,6%</td></tr>
+          <tr><td>17</td><td>Instalaciones térmicas</td><td class="num">124.771,52 €</td><td class="num">10,2%</td></tr>
+          <tr><td>18</td><td>Calidad del aire interior</td><td class="num">60.048,55 €</td><td class="num">4,9%</td></tr>
+          <tr><td>19</td><td>Instalación fotovoltaica</td><td class="num">815,67 €</td><td class="num">0,1%</td></tr>
+          <tr><td>20</td><td>Elevador</td><td class="num">27.111,45 €</td><td class="num">2,2%</td></tr>
+          <tr><td>21</td><td>Protección contra incendios</td><td class="num">10.026,78 €</td><td class="num">0,8%</td></tr>
+          <tr><td>22</td><td>Pinturas</td><td class="num">32.087,18 €</td><td class="num">2,6%</td></tr>
+          <tr><td>23</td><td>Cocinas</td><td class="num">4.932,90 €</td><td class="num">0,4%</td></tr>
+          <tr><td>24</td><td>Equipamiento</td><td class="num">1.228,51 €</td><td class="num">0,1%</td></tr>
+          <tr><td>25</td><td>Urbanización</td><td class="num">3.589,02 €</td><td class="num">0,3%</td></tr>
+          <tr><td>26</td><td>Gestión de residuos</td><td class="num">3.254,35 €</td><td class="num">0,3%</td></tr>
+          <tr><td>27</td><td>Seguridad y salud (estimado)</td><td class="num">36.906,16 €</td><td class="num">3,0%</td></tr>
+          <tr><td>SAN</td><td>Instalación de saneamiento</td><td class="num">20.316,59 €</td><td class="num">1,7%</td></tr>
+          <tr style="font-weight:800; background:#f1f5f9">
+            <td colspan="2">SUBTOTAL</td>
+            <td class="num">1.218.453,83 €</td>
+            <td class="num">100,0%</td>
+          </tr>
+          <tr style="font-weight:700; background:#f8fafc">
+            <td colspan="2">IVA (10%)</td>
+            <td class="num">121.845,38 €</td>
+            <td class="num">10,0%</td>
+          </tr>
+          <tr style="font-weight:800; background:#eff6ff; font-size:1rem">
+            <td colspan="2">TOTAL CON IVA</td>
+            <td class="num">1.340.299,21 €</td>
+            <td class="num">110,0%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Comparativa -->
+  <div class="section">
+    <h2>Comparativa de Ofertas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th style="text-align:right">PEM CYPE</th>
+            <th style="text-align:right">GLAM</th>
+            <th style="text-align:right">Trevicon</th>
+            <th style="text-align:right">GLAM vs PEM</th>
+            <th style="text-align:right">Trevicon vs PEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>PEM Total</strong></td>
+            <td class="num">523.705 €</td>
+            <td class="num">1.218.454 €</td>
+            <td class="num">1.098.001 €</td>
+            <td class="num diff-pos">+132,7%</td>
+            <td class="num diff-pos">+109,7%</td>
+          </tr>
+          <tr>
+            <td><strong>IVA incluido</strong></td>
+            <td class="num">No</td>
+            <td class="num">Sí (10%)</td>
+            <td class="num">Sí (10%)</td>
+            <td class="num diff-zero">—</td>
+            <td class="num diff-zero">—</td>
+          </tr>
+          <tr>
+            <td><strong>Total con IVA</strong></td>
+            <td class="num">576.076 €</td>
+            <td class="num">1.340.299 €</td>
+            <td class="num">1.207.801 €</td>
+            <td class="num diff-pos">+132,7%</td>
+            <td class="num diff-pos">+109,7%</td>
+          </tr>
+          <tr>
+            <td><strong>Capítulos</strong></td>
+            <td class="num">27</td>
+            <td class="num">28</td>
+            <td class="num">27</td>
+            <td class="num diff-zero">+1</td>
+            <td class="num diff-zero">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="section">
+    <h2>Herramientas</h2>
+    <div class="actions">
+      <a href="comparador_triptico.html" class="btn btn-primary">📊 Comparador interactivo tripartito</a>
+      <a href="glam_presupuesto_final.json" class="btn btn-outline">📄 JSON presupuesto GLAM</a>
+      <a href="presupuesto_referencia.json" class="btn btn-outline">📄 JSON presupuesto CYPE</a>
+      <a href="https://github.com/Ntizar/nogal9" class="btn btn-orange" target="_blank">🐙 GitHub Repo</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Hecho con ❤️ por David Antizar · <a href="https://github.com/Ntizar/nogal9" target="_blank">Nogal 9</a> · GitHub Pages
+</div>
+
+</body>
+</html>
